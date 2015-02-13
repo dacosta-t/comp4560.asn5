@@ -19,10 +19,13 @@ namespace asgn5v1
 
         // basic data for Transformer
 
-        double centerX = 0;
-        double centerY = 0;
-        double shapeWidth = 0;
+        double centerX     = 0;
+        double centerY     = 0;
+        double centerZ     = 0;
+        double shapeWidth  = 0;
         double shapeHeight = 0;
+        double shapeDepth  = 0;
+
         int numpts = 0;
         int numlines = 0;
         bool gooddata = false;
@@ -67,7 +70,7 @@ namespace asgn5v1
             this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             this.SetStyle(ControlStyles.UserPaint, true);
             this.SetStyle(ControlStyles.DoubleBuffer, true);
-            Text = "COMP 4560:  Assignment 5 (200830) (Your Name Here)";
+            Text = "COMP 4560:  Assignment 5 (200830) Eric Tsang, A00841554, 4O";
             ResizeRedraw = true;
             BackColor = Color.Black;
             MenuItem miNewDat = new MenuItem("New &Data...",
@@ -387,7 +390,14 @@ namespace asgn5v1
 
         void RestoreInitialImage()
         {
-            setScale(5, -5, 5);
+            // move the shape to the right place
+            double[] translateParams = new double[3];
+            translateParams[0] = -centerX;
+            translateParams[1] = -centerY;
+            translateParams[2] = -centerZ;
+
+            setTranslation(translateParams);
+            // setScale(1, -1, 1);
 
             // force repaint
             Invalidate();
@@ -449,6 +459,8 @@ namespace asgn5v1
             Wrapper<double> maxx = null;
             Wrapper<double> miny = null;
             Wrapper<double> maxy = null;
+            Wrapper<double> minz = null;
+            Wrapper<double> maxz = null;
 
             //this may allocate slightly more rows that necessary
             vertices = new double[coorddata.Count,4];
@@ -481,13 +493,25 @@ namespace asgn5v1
                     maxy = new Wrapper<double>(vertices[numpts,1]);
                 else
                     maxy.Value = Math.Max(maxy.Value, vertices[numpts,1]);
+                if(minz == null)
+                    minz = new Wrapper<double>(vertices[numpts,1]);
+                else
+                    minz.Value = Math.Min(minz.Value, vertices[numpts,1]);
+                if(maxz == null)
+                    maxz = new Wrapper<double>(vertices[numpts,1]);
+                else
+                    maxz.Value = Math.Max(maxz.Value, vertices[numpts,1]);
+
                 numpts++;
             }
 
+            // initialize shape data
             centerX     = (maxx.Value+minx.Value)/2;
             centerY     = (maxy.Value+miny.Value)/2;
+            centerZ     = (maxz.Value+minz.Value)/2;
             shapeWidth  = maxx.Value-minx.Value;
             shapeHeight = maxy.Value-miny.Value;
+            shapeDepth  = maxz.Value-minz.Value;
 
         }// end of DecodeCoords
 
@@ -521,36 +545,95 @@ namespace asgn5v1
 
         }
 
-        ////////////////////////////////
-        // helper transform functions //
-        ////////////////////////////////
+        ///////////////////////////////
+        // basic transform functions //
+        ///////////////////////////////
 
-        private void addTranslation(int xDiff, int yDiff, int zDiff)
+        private void addNetTransform(double[,] matrix)
         {
-            ctrans[3, 0] += xDiff;
-            ctrans[3, 1] += yDiff;
-            ctrans[3, 2] += zDiff;
+            double[,] temp = new double[4,4];
+
+            // multiple the matrices
+            for(int i = 0; i < 4; i++)
+            {
+                for(int j = 0; j < 4; j++)
+                {
+                    for(int k = 0; k < 4; k++)
+                    {
+                        temp[i,j] += ctrans[i,k]*matrix[k,j];
+                    }
+                }
+            }
+
+            // assign ctrans to the new matrix
+            ctrans = temp;
         }
 
-        private void setTranslation(int newX, int newY, int newZ)
+        /////////////////////////////////////
+        // convenience transform functions //
+        /////////////////////////////////////
+
+        // translate functions
+
+        private void addTranslation(double[] xyz)
         {
-            ctrans[3, 0] = newX;
-            ctrans[3, 1] = newY;
-            ctrans[3, 2] = newZ;
+            double[,] temp = new double[4,4];
+            setIdentity(temp,4,4);
+            temp[3,0] = xyz[0];
+            temp[3,1] = xyz[1];
+            temp[3,2] = xyz[2];
+            addNetTransform(temp);
         }
 
-        private void addScale(int xDiff, int yDiff, int zDiff)
+        private void rmTranslation(double[] xyz)
         {
-            ctrans[0, 0] += xDiff;
-            ctrans[1, 1] += yDiff;
-            ctrans[2, 2] += zDiff;
+            double[,] temp = new double[4,4];
+            setIdentity(temp,4,4);
+            temp[3,0] = -xyz[0];
+            temp[3,1] = -xyz[1];
+            temp[3,2] = -xyz[2];
+            addNetTransform(temp);
         }
 
-        private void setScale(int newX, int newY, int newZ)
+        private void getTranslation(double[] xyz)
         {
-            ctrans[0, 0] = newX;
-            ctrans[1, 1] = newY;
-            ctrans[2, 2] = newZ;
+            xyz[0] = ctrans[3,0];
+            xyz[1] = ctrans[3,1];
+            xyz[2] = ctrans[3,2];
+        }
+
+        private void setTranslation(double[] xyz)
+        {
+            ctrans[3,0] = xyz[0];
+            ctrans[3,1] = xyz[1];
+            ctrans[3,2] = xyz[2];
+        }
+
+        // scale functions
+
+        private void addScale(double[] xyz)
+        {
+            double[,] temp = new double[4,4];
+            setIdentity(temp,4,4);
+            temp[0,0] = xyz[0];
+            temp[1,1] = xyz[1];
+            temp[2,2] = xyz[2];
+            temp[3,3] = 1;
+            addNetTransform(temp);
+        }
+
+        private void getScale(double[] xyz)
+        {
+            xyz[0] = ctrans[0,0];
+            xyz[1] = ctrans[1,1];
+            xyz[2] = ctrans[2,2];
+        }
+
+        private void setScale(double[] xyz)
+        {
+            ctrans[0,0] = xyz[0];
+            ctrans[1,1] = xyz[1];
+            ctrans[2,2] = xyz[2];
         }
 
         ///////////////////
@@ -561,31 +644,95 @@ namespace asgn5v1
         {
             if (e.Button == transleftbtn)
             {
-                addTranslation(-5, 0, 0);
+                double[] translateParams = new double[3];
+                translateParams[0] = -50;
+                translateParams[1] = 0;
+                translateParams[2] = 0;
+
+                addTranslation(translateParams);
+
                 Refresh();
             }
             if (e.Button == transrightbtn)
             {
-                addTranslation(5, 0, 0);
+                double[] translateParams = new double[3];
+                translateParams[0] = 50;
+                translateParams[1] = 0;
+                translateParams[2] = 0;
+
+                addTranslation(translateParams);
+
                 Refresh();
             }
             if (e.Button == transupbtn)
             {
-                addTranslation(0, -5, 0);
+                double[] translateParams = new double[3];
+                translateParams[0] = 0;
+                translateParams[1] = -25;
+                translateParams[2] = 0;
+
+                addTranslation(translateParams);
+
                 Refresh();
             }
 
             if(e.Button == transdownbtn)
             {
-                addTranslation(0, 5, 0);
+                double[] translateParams = new double[3];
+                translateParams[0] = 0;
+                translateParams[1] = 25;
+                translateParams[2] = 0;
+
+                addTranslation(translateParams);
+
                 Refresh();
             }
             if (e.Button == scaleupbtn)
             {
+                double[] oldTranslation = new double[3];
+                double[] oldScale = new double[3];
+                double[] translationParams = new double[3];
+                double[] scaleParams = new double[3];
+
+                getTranslation(oldTranslation);
+                getScale(oldScale);
+
+                translationParams[0] = -oldTranslation[0]-centerX*oldScale[0];
+                translationParams[1] = -oldTranslation[1]-centerY*oldScale[1];
+                translationParams[2] = -oldTranslation[2]-centerZ*oldScale[2];
+
+                scaleParams[0] = 1.1;
+                scaleParams[1] = 1.1;
+                scaleParams[2] = 1.1;
+
+                addTranslation(translationParams);
+                addScale(scaleParams);
+                rmTranslation(translationParams);
+
                 Refresh();
             }
             if (e.Button == scaledownbtn)
             {
+                double[] oldTranslation = new double[3];
+                double[] translationParams = new double[3];
+                double[] oldScale = new double[3];
+                double[] scaleParams = new double[3];
+
+                getTranslation(oldTranslation);
+                getScale(oldScale);
+
+                translationParams[0] = -oldTranslation[0]-centerX*oldScale[0];
+                translationParams[1] = -oldTranslation[1]-centerY*oldScale[1];
+                translationParams[2] = -oldTranslation[2]-centerZ*oldScale[2];
+
+                scaleParams[0] = 0.9;
+                scaleParams[1] = 0.9;
+                scaleParams[2] = 0.9;
+
+                addTranslation(translationParams);
+                addScale(scaleParams);
+                rmTranslation(translationParams);
+
                 Refresh();
             }
             if (e.Button == rotxby1btn)
