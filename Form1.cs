@@ -391,12 +391,7 @@ namespace asgn5v1
         void RestoreInitialImage()
         {
             // move the shape to the right place
-            double[] translateParams = new double[3];
-            translateParams[0] = -centerX;
-            translateParams[1] = -centerY;
-            translateParams[2] = -centerZ;
-
-            setTranslation(translateParams);
+            addTranslation(getCenterCoords());
             // setScale(1, -1, 1);
 
             // force repaint
@@ -573,6 +568,22 @@ namespace asgn5v1
         // convenience transform functions //
         /////////////////////////////////////
 
+        private double[] getCenterCoords()
+        {
+            double[] currTranslation = new double[3];
+            double[] currScale = new double[3];
+            double[] center = new double[3];
+
+            getTranslation(currTranslation);
+            getScale(currScale);
+
+            center[0] = -currTranslation[0]-centerX*currScale[0];
+            center[1] = -currTranslation[1]-centerY*currScale[1];
+            center[2] = -currTranslation[2]-centerZ*currScale[2];
+
+            return center;
+        }
+
         // translate functions
 
         private void addTranslation(double[] xyz)
@@ -636,6 +647,59 @@ namespace asgn5v1
             ctrans[2,2] = xyz[2];
         }
 
+        // rotate functions
+
+        /**
+         * rotates around the x axis in a clockwise direction, from perspective
+         *   of positive X axis to the origin.
+         *
+         * @param radians radians to rotate around x axis as described above.
+         */
+        private void rotateX(double radians)
+        {
+            double[,] temp = new double[4,4];
+            setIdentity(temp,4,4);
+            temp[1,1] = Math.Cos(radians);
+            temp[1,2] = -Math.Sin(radians);
+            temp[2,1] = Math.Sin(radians);
+            temp[2,2] = Math.Cos(radians);
+            addNetTransform(temp);
+        }
+
+        /**
+         * rotates around the y axis in a clockwise direction, from perspective
+         *   of positive Y axis to the origin.
+         *
+         * @param radians radians to rotate around y axis as described above.
+         */
+        private void rotateY(double radians)
+        {
+            double[,] temp = new double[4,4];
+            setIdentity(temp,4,4);
+            temp[0,0] = Math.Cos(radians);
+            temp[0,2] = -Math.Sin(radians);
+            temp[2,0] = Math.Sin(radians);
+            temp[2,2] = Math.Cos(radians);
+            addNetTransform(temp);
+        }
+
+        /**
+         * rotates around the z axis in a clockwise direction, from perspective
+         *   of positive Z axis to the origin.
+         *
+         * @param radians radians to rotate around z axis as described above.
+         */
+        private void rotateZ(double radians)
+        {
+            double[,] temp = new double[4,4];
+            setIdentity(temp,4,4);
+            temp[0,0] = Math.Cos(radians);
+            temp[0,1] = Math.Sin(radians);
+            temp[1,0] = -Math.Sin(radians);
+            temp[1,1] = Math.Cos(radians);
+            addNetTransform(temp);
+        }
+
         ///////////////////
         // event handler //
         ///////////////////
@@ -644,108 +708,74 @@ namespace asgn5v1
         {
             if (e.Button == transleftbtn)
             {
-                double[] translateParams = new double[3];
-                translateParams[0] = -50;
-                translateParams[1] = 0;
-                translateParams[2] = 0;
-
-                addTranslation(translateParams);
-
+                addTranslation(new double[] {-50, 0, 0});
                 Refresh();
             }
             if (e.Button == transrightbtn)
             {
-                double[] translateParams = new double[3];
-                translateParams[0] = 50;
-                translateParams[1] = 0;
-                translateParams[2] = 0;
-
-                addTranslation(translateParams);
-
+                addTranslation(new double[] {50, 0, 0});
                 Refresh();
             }
             if (e.Button == transupbtn)
             {
-                double[] translateParams = new double[3];
-                translateParams[0] = 0;
-                translateParams[1] = -25;
-                translateParams[2] = 0;
-
-                addTranslation(translateParams);
-
+                addTranslation(new double[] {0, -25, 0});
                 Refresh();
             }
 
             if(e.Button == transdownbtn)
             {
-                double[] translateParams = new double[3];
-                translateParams[0] = 0;
-                translateParams[1] = 25;
-                translateParams[2] = 0;
-
-                addTranslation(translateParams);
-
+                addTranslation(new double[] {0, 25, 0});
                 Refresh();
             }
             if (e.Button == scaleupbtn)
             {
-                double[] oldTranslation = new double[3];
-                double[] oldScale = new double[3];
-                double[] translationParams = new double[3];
-                double[] scaleParams = new double[3];
-
-                getTranslation(oldTranslation);
-                getScale(oldScale);
-
-                translationParams[0] = -oldTranslation[0]-centerX*oldScale[0];
-                translationParams[1] = -oldTranslation[1]-centerY*oldScale[1];
-                translationParams[2] = -oldTranslation[2]-centerZ*oldScale[2];
-
-                scaleParams[0] = 1.1;
-                scaleParams[1] = 1.1;
-                scaleParams[2] = 1.1;
+                double[] translationParams = getCenterCoords();
 
                 addTranslation(translationParams);
-                addScale(scaleParams);
+                addScale(new double[] {1.1,1.1,1.1});
                 rmTranslation(translationParams);
 
                 Refresh();
             }
             if (e.Button == scaledownbtn)
             {
-                double[] oldTranslation = new double[3];
-                double[] translationParams = new double[3];
-                double[] oldScale = new double[3];
-                double[] scaleParams = new double[3];
-
-                getTranslation(oldTranslation);
-                getScale(oldScale);
-
-                translationParams[0] = -oldTranslation[0]-centerX*oldScale[0];
-                translationParams[1] = -oldTranslation[1]-centerY*oldScale[1];
-                translationParams[2] = -oldTranslation[2]-centerZ*oldScale[2];
-
-                scaleParams[0] = 0.9;
-                scaleParams[1] = 0.9;
-                scaleParams[2] = 0.9;
+                double[] translationParams = getCenterCoords();
 
                 addTranslation(translationParams);
-                addScale(scaleParams);
+                addScale(new double[] {0.9,0.9,0.9});
                 rmTranslation(translationParams);
 
                 Refresh();
             }
             if (e.Button == rotxby1btn)
             {
+                double[] translationParams = getCenterCoords();
 
+                addTranslation(translationParams);
+                rotateX(0.05);
+                rmTranslation(translationParams);
+
+                Refresh();
             }
             if (e.Button == rotyby1btn)
             {
+                double[] translationParams = getCenterCoords();
 
+                addTranslation(translationParams);
+                rotateY(0.05);
+                rmTranslation(translationParams);
+
+                Refresh();
             }
             if (e.Button == rotzby1btn)
             {
+                double[] translationParams = getCenterCoords();
 
+                addTranslation(translationParams);
+                rotateZ(0.05);
+                rmTranslation(translationParams);
+
+                Refresh();
             }
 
             if (e.Button == rotxbtn)
