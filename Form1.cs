@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Data;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace asgn5v1
 {
@@ -25,6 +26,8 @@ namespace asgn5v1
         double shapeWidth  = 0;
         double shapeHeight = 0;
         double shapeDepth  = 0;
+
+        Thread rotationThread;
 
         int numpts = 0;
         int numlines = 0;
@@ -390,9 +393,18 @@ namespace asgn5v1
 
         void RestoreInitialImage()
         {
+            // reset ctrans
+            ctrans = new double[4,4];
+            setIdentity(ctrans,4,4);
+
             // move the shape to the right place
+            addScale(new double[] {
+                this.Height/2/shapeHeight,
+                -this.Height/2/shapeHeight,
+                this.Height/2/shapeHeight
+                });
             rmTranslation(getCenterCoords());
-            // setScale(1, -1, 1);
+            addTranslation(new double[] {this.Width/2,this.Height/2,0});
 
             // force repaint
             Invalidate();
@@ -570,10 +582,8 @@ namespace asgn5v1
 
         private double[] getCenterCoords()
         {
-            double[] currScale = new double[3];
             double[] center = new double[3];
 
-            getScale(currScale);
             getTranslation(center);
 
             center[0] += centerX*ctrans[0,0]+
@@ -638,13 +648,6 @@ namespace asgn5v1
             addNetTransform(temp);
         }
 
-        private void getScale(double[] xyz)
-        {
-            xyz[0] = ctrans[0,0];
-            xyz[1] = ctrans[1,1];
-            xyz[2] = ctrans[2,2];
-        }
-
         private void setScale(double[] xyz)
         {
             ctrans[0,0] = xyz[0];
@@ -705,12 +708,80 @@ namespace asgn5v1
             addNetTransform(temp);
         }
 
+        // shear functions
+
+        private void shearX(double scale)
+        {
+            double[,] temp = new double[4,4];
+            setIdentity(temp,4,4);
+            temp[1,0] = scale;
+            addNetTransform(temp);
+        }
+
+        /////////////////////////////////////////
+        // public rotate functions for threads //
+        /////////////////////////////////////////
+
+        public void continuouslyRotateX()
+        {
+            while(true)
+            {
+                Thread.Sleep(500);
+
+                double[] translationParams = getCenterCoords();
+
+                rmTranslation(translationParams);
+                rotateX(0.05);
+                addTranslation(translationParams);
+
+                Refresh();
+            }
+        }
+
+        public void continuouslyRotateY()
+        {
+            while(true)
+            {
+                Thread.Sleep(500);
+
+                double[] translationParams = getCenterCoords();
+
+                rmTranslation(translationParams);
+                rotateY(0.05);
+                addTranslation(translationParams);
+
+                Refresh();
+            }
+        }
+
+        public void continuouslyRotateZ()
+        {
+            while(true)
+            {
+                Thread.Sleep(500);
+
+                double[] translationParams = getCenterCoords();
+
+                rmTranslation(translationParams);
+                rotateZ(0.05);
+                addTranslation(translationParams);
+
+                Refresh();
+            }
+        }
+
         ///////////////////
         // event handler //
         ///////////////////
 
         private void toolBar1_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
         {
+            if (rotationThread != null)
+            {
+                rotationThread.Abort();
+                rotationThread = null;
+            }
+
             if (e.Button == transleftbtn)
             {
                 addTranslation(new double[] {-50, 0, 0});
@@ -785,25 +856,54 @@ namespace asgn5v1
 
             if (e.Button == rotxbtn)
             {
-
+                rotationThread = new Thread(new ThreadStart(this.continuouslyRotateX));
+                rotationThread.Start();
             }
             if (e.Button == rotybtn)
             {
-
+                rotationThread = new Thread(new ThreadStart(this.continuouslyRotateY));
+                rotationThread.Start();
             }
 
             if (e.Button == rotzbtn)
             {
-
+                rotationThread = new Thread(new ThreadStart(this.continuouslyRotateZ));
+                rotationThread.Start();
             }
 
             if(e.Button == shearleftbtn)
             {
+                double[] center = getCenterCoords();
+                double[] translationParams = new double[3];
+
+                translationParams[1] = -centerX*ctrans[0,1]
+                                       -centerY*ctrans[1,1]
+                                       -centerZ*ctrans[2,1];
+
+                rmTranslation(center);
+                rmTranslation(translationParams);
+                shearX(0.1);
+                addTranslation(translationParams);
+                addTranslation(center);
+
                 Refresh();
             }
 
             if (e.Button == shearrightbtn)
             {
+                double[] center = getCenterCoords();
+                double[] translationParams = new double[3];
+
+                translationParams[1] = -centerX*ctrans[0,1]+
+                                       -centerY*ctrans[1,1]+
+                                       -centerZ*ctrans[2,1];
+
+                rmTranslation(center);
+                rmTranslation(translationParams);
+                shearX(-0.1);
+                addTranslation(translationParams);
+                addTranslation(center);
+
                 Refresh();
             }
 
