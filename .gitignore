@@ -1,0 +1,9 @@
+bin/*
+Data\ and\ Demo/*
+obj/*
+*.resx
+*.ico
+*.csproj
+*.sln
+*.htm
+*.XML
