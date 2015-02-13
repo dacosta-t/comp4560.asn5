@@ -391,7 +391,7 @@ namespace asgn5v1
         void RestoreInitialImage()
         {
             // move the shape to the right place
-            addTranslation(getCenterCoords());
+            rmTranslation(getCenterCoords());
             // setScale(1, -1, 1);
 
             // force repaint
@@ -570,16 +570,21 @@ namespace asgn5v1
 
         private double[] getCenterCoords()
         {
-            double[] currTranslation = new double[3];
             double[] currScale = new double[3];
             double[] center = new double[3];
 
-            getTranslation(currTranslation);
             getScale(currScale);
+            getTranslation(center);
 
-            center[0] = -currTranslation[0]-centerX*currScale[0];
-            center[1] = -currTranslation[1]-centerY*currScale[1];
-            center[2] = -currTranslation[2]-centerZ*currScale[2];
+            center[0] += centerX*ctrans[0,0]+
+                         centerY*ctrans[1,0]+
+                         centerZ*ctrans[2,0];
+            center[1] += centerX*ctrans[0,1]+
+                         centerY*ctrans[1,1]+
+                         centerZ*ctrans[2,1];
+            center[2] += centerX*ctrans[0,2]+
+                         centerY*ctrans[1,2]+
+                         centerZ*ctrans[2,2];
 
             return center;
         }
@@ -651,7 +656,7 @@ namespace asgn5v1
 
         /**
          * rotates around the x axis in a clockwise direction, from perspective
-         *   of positive X axis to the origin.
+         *   of positive x axis to the origin.
          *
          * @param radians radians to rotate around x axis as described above.
          */
@@ -668,7 +673,7 @@ namespace asgn5v1
 
         /**
          * rotates around the y axis in a clockwise direction, from perspective
-         *   of positive Y axis to the origin.
+         *   of positive y axis to the origin.
          *
          * @param radians radians to rotate around y axis as described above.
          */
@@ -685,7 +690,7 @@ namespace asgn5v1
 
         /**
          * rotates around the z axis in a clockwise direction, from perspective
-         *   of positive Z axis to the origin.
+         *   of positive z axis to the origin.
          *
          * @param radians radians to rotate around z axis as described above.
          */
@@ -731,9 +736,9 @@ namespace asgn5v1
             {
                 double[] translationParams = getCenterCoords();
 
-                addTranslation(translationParams);
-                addScale(new double[] {1.1,1.1,1.1});
                 rmTranslation(translationParams);
+                addScale(new double[] {1.1,1.1,1.1});
+                addTranslation(translationParams);
 
                 Refresh();
             }
@@ -741,9 +746,9 @@ namespace asgn5v1
             {
                 double[] translationParams = getCenterCoords();
 
-                addTranslation(translationParams);
-                addScale(new double[] {0.9,0.9,0.9});
                 rmTranslation(translationParams);
+                addScale(new double[] {0.9,0.9,0.9});
+                addTranslation(translationParams);
 
                 Refresh();
             }
@@ -751,9 +756,9 @@ namespace asgn5v1
             {
                 double[] translationParams = getCenterCoords();
 
-                addTranslation(translationParams);
-                rotateX(0.05);
                 rmTranslation(translationParams);
+                rotateX(0.05);
+                addTranslation(translationParams);
 
                 Refresh();
             }
@@ -761,9 +766,9 @@ namespace asgn5v1
             {
                 double[] translationParams = getCenterCoords();
 
-                addTranslation(translationParams);
-                rotateY(0.05);
                 rmTranslation(translationParams);
+                rotateY(0.05);
+                addTranslation(translationParams);
 
                 Refresh();
             }
@@ -771,9 +776,9 @@ namespace asgn5v1
             {
                 double[] translationParams = getCenterCoords();
 
-                addTranslation(translationParams);
-                rotateZ(0.05);
                 rmTranslation(translationParams);
+                rotateZ(0.05);
+                addTranslation(translationParams);
 
                 Refresh();
             }
