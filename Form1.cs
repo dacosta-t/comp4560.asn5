@@ -605,6 +605,13 @@ namespace asgn5v1
 
         // translate functions
 
+        /**
+         * adds the passed translation to the net matrix, ctrans; transnlates
+         *   the origin, (0,0,0) to the specified coordinate (xyz)
+         *
+         * @param xyz represents the amount to translate along the x, y and z
+         *   axis. index 0 is for x, 1 is for y, and 2 is for z.
+         */
         private void addTranslation(double[] xyz)
         {
             double[,] temp = new double[4,4];
@@ -615,6 +622,12 @@ namespace asgn5v1
             addNetTransform(temp);
         }
 
+        /**
+         * translates the specified point, such that after the translation, it
+         *   will be at the origin. (0,0,0)
+         *
+         * @param xyz array, specifying a point in a 3 dimensional space.
+         */
         private void rmTranslation(double[] xyz)
         {
             double[,] temp = new double[4,4];
@@ -625,6 +638,14 @@ namespace asgn5v1
             addNetTransform(temp);
         }
 
+        /**
+         * reads from the net transformation matrix, and fills in the passed
+         *   array with the shape's current translation values. index 0, will be
+         *   given the shape's current x offset, index 1 is given the y's, and
+         *   so on.
+         *
+         * @param xyz coordinates to translate to 0,0,0.
+         */
         private void getTranslation(double[] xyz)
         {
             xyz[0] = ctrans[3,0];
@@ -632,6 +653,16 @@ namespace asgn5v1
             xyz[2] = ctrans[3,2];
         }
 
+        /**
+         * sets the translation, so that the shape's overall translation will be
+         *   set to the passed value.
+         *
+         * the outcome here would be the same as calling getTranslation(oldxyz),
+         *   rmTranslation(oldxyz), then finally, addTranslation(xyz) with the
+         *   current parameters.
+         *
+         * @param xyz coordinates to set the shape's real origin to.
+         */
         private void setTranslation(double[] xyz)
         {
             ctrans[3,0] = xyz[0];
@@ -641,6 +672,11 @@ namespace asgn5v1
 
         // scale functions
 
+        /**
+         * adds to the net transformation matrix's existing scale values.
+         *
+         * @param xyz scale factors for the x, y and z axis
+         */
         private void addScale(double[] xyz)
         {
             double[,] temp = new double[4,4];
@@ -652,6 +688,11 @@ namespace asgn5v1
             addNetTransform(temp);
         }
 
+        /**
+         * sets the net transformation matrix's scaling values.
+         *
+         * @param xyz scale factors for the x, y and z axis
+         */
         private void setScale(double[] xyz)
         {
             ctrans[0,0] = xyz[0];
@@ -714,6 +755,11 @@ namespace asgn5v1
 
         // shear functions
 
+        /**
+         * shears ctrans along the x axis, with respect to the y axis.
+         *
+         * @param scale amount that the y axis would influence the x axis.
+         */
         private void shearX(double scale)
         {
             double[,] temp = new double[4,4];
@@ -741,7 +787,7 @@ namespace asgn5v1
                     rotateZ(0.05);
                 addTranslation(translationParams);
                 Refresh();
-                await Task.Delay(50);
+                await Task.Delay(25);
             }
         }
 
@@ -795,10 +841,6 @@ namespace asgn5v1
             }
             if (e.Button == rotxby1btn)
             {
-                continuouslyRotateX = false;
-                continuouslyRotateY = false;
-                continuouslyRotateZ = false;
-
                 double[] translationParams = getCenterCoords();
 
                 rmTranslation(translationParams);
@@ -809,10 +851,6 @@ namespace asgn5v1
             }
             if (e.Button == rotyby1btn)
             {
-                continuouslyRotateX = false;
-                continuouslyRotateY = false;
-                continuouslyRotateZ = false;
-
                 double[] translationParams = getCenterCoords();
 
                 rmTranslation(translationParams);
@@ -823,10 +861,6 @@ namespace asgn5v1
             }
             if (e.Button == rotzby1btn)
             {
-                continuouslyRotateX = false;
-                continuouslyRotateY = false;
-                continuouslyRotateZ = false;
-
                 double[] translationParams = getCenterCoords();
 
                 rmTranslation(translationParams);
@@ -834,6 +868,15 @@ namespace asgn5v1
                 addTranslation(translationParams);
 
                 Refresh();
+            }
+
+            if(e.Button != rotxbtn
+                && e.Button != rotybtn
+                && e.Button != rotzbtn)
+            {
+                continuouslyRotateX = false;
+                continuouslyRotateY = false;
+                continuouslyRotateZ = false;
             }
 
             if (e.Button == rotxbtn)
