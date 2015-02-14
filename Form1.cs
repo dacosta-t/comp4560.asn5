@@ -28,9 +28,9 @@ namespace asgn5v1
         double shapeDepth  = 0;
 
         // thread used to continuously rotate the shape
-        bool continuouslyRotateX;
-        bool continuouslyRotateY;
-        bool continuouslyRotateZ;
+        bool continuouslyRotateX = false;
+        bool continuouslyRotateY = false;
+        bool continuouslyRotateZ = false;
 
         // basic data for Transformer
         int numpts = 0;
@@ -870,27 +870,18 @@ namespace asgn5v1
                 Refresh();
             }
 
-            if(e.Button != rotxbtn
-                && e.Button != rotybtn
-                && e.Button != rotzbtn)
-            {
-                continuouslyRotateX = false;
-                continuouslyRotateY = false;
-                continuouslyRotateZ = false;
-            }
-
             if (e.Button == rotxbtn)
             {
-                continuouslyRotateX = true;
+                continuouslyRotateX = !continuouslyRotateX;
             }
             if (e.Button == rotybtn)
             {
-                continuouslyRotateY = true;
+                continuouslyRotateY = !continuouslyRotateY;
             }
 
             if (e.Button == rotzbtn)
             {
-                continuouslyRotateZ = true;
+                continuouslyRotateZ = !continuouslyRotateZ;
             }
 
             if(e.Button == shearleftbtn)
