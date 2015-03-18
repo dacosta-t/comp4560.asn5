@@ -28,9 +28,7 @@ namespace asgn5v1
         double shapeDepth  = 0;
 
         // thread used to continuously rotate the shape
-        bool continuouslyRotateX = false;
-        bool continuouslyRotateY = false;
-        bool continuouslyRotateZ = false;
+        Thread rotateThread;
 
         // basic data for Transformer
         int numpts = 0;
@@ -517,9 +515,9 @@ namespace asgn5v1
             }
 
             // initialize shape data
-            centerX     = (maxx.Value+minx.Value)/2;
-            centerY     = (maxy.Value+miny.Value)/2;
-            centerZ     = (maxz.Value+minz.Value)/2;
+            centerX     = vertices[0,0];
+            centerY     = vertices[0,1];
+            centerZ     = vertices[0,2];
             shapeWidth  = maxx.Value-minx.Value;
             shapeHeight = maxy.Value-miny.Value;
             shapeDepth  = maxz.Value-minz.Value;
@@ -553,7 +551,6 @@ namespace asgn5v1
 
         private void Transformer_Load(object sender, System.EventArgs e)
         {
-            continuouslyRotate();
         }
 
         ///////////////////////////////
@@ -772,22 +769,51 @@ namespace asgn5v1
         // public rotate functions for threads //
         /////////////////////////////////////////
 
-        private async void continuouslyRotate()
+        private void continuouslyRotateX()
         {
             while (true)
             {
                 double[] translationParams = getCenterCoords();
 
                 rmTranslation(translationParams);
-                if (continuouslyRotateX)
-                    rotateX(0.05);
-                if (continuouslyRotateY)
-                    rotateY(0.05);
-                if (continuouslyRotateZ)
-                    rotateZ(0.05);
+                rotateX(0.05);
                 addTranslation(translationParams);
-                Refresh();
-                await Task.Delay(25);
+
+                Invalidate();
+
+                Thread.Sleep(50);
+            }
+        }
+
+        private void continuouslyRotateY()
+        {
+            while (true)
+            {
+                double[] translationParams = getCenterCoords();
+
+                rmTranslation(translationParams);
+                rotateY(0.05);
+                addTranslation(translationParams);
+
+                Invalidate();
+
+                Thread.Sleep(50);
+            }
+        }
+
+        private void continuouslyRotateZ()
+        {
+            while (true)
+            {
+                double[] translationParams = getCenterCoords();
+
+                rmTranslation(translationParams);
+                rotateZ(0.05);
+                addTranslation(translationParams);
+
+                Invalidate();
+
+                Thread.Sleep(50);
             }
         }
 
@@ -797,6 +823,10 @@ namespace asgn5v1
 
         private void toolBar1_ButtonClick(object sender, System.Windows.Forms.ToolBarButtonClickEventArgs e)
         {
+            if (rotateThread != null)
+            {
+                rotateThread.Abort();
+            }
 
             if (e.Button == transleftbtn)
             {
@@ -872,16 +902,19 @@ namespace asgn5v1
 
             if (e.Button == rotxbtn)
             {
-                continuouslyRotateX = !continuouslyRotateX;
+                rotateThread = new Thread(new ThreadStart(continuouslyRotateX));
+                rotateThread.Start();
             }
             if (e.Button == rotybtn)
             {
-                continuouslyRotateY = !continuouslyRotateY;
+                rotateThread = new Thread(new ThreadStart(continuouslyRotateY));
+                rotateThread.Start();
             }
 
             if (e.Button == rotzbtn)
             {
-                continuouslyRotateZ = !continuouslyRotateZ;
+                rotateThread = new Thread(new ThreadStart(continuouslyRotateZ));
+                rotateThread.Start();
             }
 
             if(e.Button == shearleftbtn)
